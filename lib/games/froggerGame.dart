@@ -1,7 +1,10 @@
 // ignore_for_file: file_names
 
+import 'dart:math';
+
 import 'package:flame/game.dart';
 import 'package:flame/keyboard.dart';
+import 'package:flame_playarea/utils/randomNumber.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,9 +12,11 @@ import 'package:flutter/services.dart';
 class FroggerGame extends BaseGame with KeyboardEvents {
   late Rect frog;
   final double frogWidthHeightPercentage = 0.04;
+  final double vehiclesPerRow = 3;
   late double frogHeightWidth;
 
-  late double vehicleHeightPercentage = 0.05;
+  final double vehicleHeightPercentage = 0.05;
+  late double vehicleHeight;
 
   late Size screenSize;
   late Rect nonWaterLine;
@@ -29,15 +34,42 @@ class FroggerGame extends BaseGame with KeyboardEvents {
   late Rect eighthVehicle;
   late Rect ninthVehicle;
 
+  late List<Rect> bottomVehicles = [];
+
+  int generateVehicleSpace() {
+    Random random = Random.secure();
+    return random.nextInt(1);
+  }
+
+  void addVehicles() {
+    //add bottom vehicles
+    //inbetween space so frog can move across them
+
+    //bottom vehicles top screenSize.height - vehicleHeight - (frogHeightWidth * 1.25)
+    for (int i = 0; i < vehiclesPerRow; i++) {
+      //
+      if (i == 0) {
+        bottomVehicles.add(Rect.fromLTWH(0, screenSize.height - vehicleHeight - (frogHeightWidth * 1.25), screenSize.width * RandomNumber.randomDouble(0.2, 0.4), vehicleHeight));
+      } else {
+        Rect previousVehicle = bottomVehicles[i - 1];
+        bottomVehicles.add(Rect.fromLTWH(previousVehicle.left - previousVehicle.width - (frogHeightWidth * (RandomNumber.randomDouble(0.5, 0.75) + 1.0)), previousVehicle.top, screenSize.width * RandomNumber.randomDouble(0.2, 0.3), vehicleHeight));
+      }
+      debugPrint("Vehicle $i left - ${bottomVehicles[i].left.toStringAsFixed(2)}");
+    }
+  }
+
   @override
   Future<void> onLoad() async {
     screenSize = size.toSize();
     frogHeightWidth = screenSize.width * frogWidthHeightPercentage;
+    vehicleHeight = screenSize.width * vehicleHeightPercentage;
 
     nonWaterLine = Rect.fromLTWH(0, screenSize.height * (0.5), screenSize.width, screenSize.width * frogWidthHeightPercentage);
     waterLine = Rect.fromLTWH(0, screenSize.height * (0.05), screenSize.width, screenSize.width * frogWidthHeightPercentage);
     frog = Rect.fromLTWH(screenSize.width * (0.5) - frogHeightWidth, screenSize.height - frogHeightWidth, frogHeightWidth, frogHeightWidth);
 
+    addVehicles();
+    /*
     //three, six and nine
     thirdVehicle = Rect.fromLTWH(0, screenSize.height - (screenSize.width * vehicleHeightPercentage) - (frogHeightWidth * 1.25), screenSize.width * vehicleHeightPercentage * 2, screenSize.width * vehicleHeightPercentage);
     //sixth vehicle height and top will be same as third
@@ -62,6 +94,7 @@ class FroggerGame extends BaseGame with KeyboardEvents {
     seventhVehicle = Rect.fromLTWH(fourthVehicle.left + (screenSize.width * vehicleHeightPercentage * 1.5 + fourthVehicle.width) + screenSize.width * (0.225), screenSize.height - (screenSize.width * vehicleHeightPercentage * 3) - (frogHeightWidth * 1.85),
         (screenSize.width * vehicleHeightPercentage * 1.5 + fourthVehicle.width), screenSize.width * vehicleHeightPercentage);
 
+    */
     super.onLoad();
   }
 
@@ -72,6 +105,11 @@ class FroggerGame extends BaseGame with KeyboardEvents {
     canvas.drawRect(nonWaterLine, Paint()..color = Colors.green);
     canvas.drawRect(waterLine, Paint()..color = Colors.green);
 
+    for (var i = 0; i < vehiclesPerRow; i++) {
+      canvas.drawRect(bottomVehicles[i], Paint()..color = Colors.blue);
+    }
+
+    /*
     //draw vehicle
     canvas.drawRect(thirdVehicle, Paint()..color = Colors.blue);
     canvas.drawRect(sixthVehicle, Paint()..color = Colors.purpleAccent);
@@ -85,6 +123,7 @@ class FroggerGame extends BaseGame with KeyboardEvents {
     canvas.drawRect(firstVehicle, Paint()..color = Colors.deepOrange);
     canvas.drawRect(fourthVehicle, Paint()..color = Colors.blueAccent);
     canvas.drawRect(seventhVehicle, Paint()..color = Colors.purpleAccent);
+    */
 
     //
     canvas.drawRect(frog, paint);
@@ -99,6 +138,17 @@ class FroggerGame extends BaseGame with KeyboardEvents {
   }
 
   void moveVehicles(double dt) {
+    for (var i = 0; i < vehiclesPerRow; i++) {
+      Rect bottomVehicle = bottomVehicles[i];
+
+      if (bottomVehicle.left < (screenSize.width + bottomVehicle.width)) {
+        bottomVehicles[i] = Rect.fromLTWH(bottomVehicle.left + (dt * 150), bottomVehicle.top, bottomVehicle.width, bottomVehicle.height);
+      } else {
+        bottomVehicles[i] = Rect.fromLTWH(-bottomVehicle.width, bottomVehicle.top, bottomVehicle.width, bottomVehicle.height);
+      }
+    }
+
+    /*
     //move third vehicle
     if (thirdVehicle.left < (screenSize.width + thirdVehicle.width)) {
       thirdVehicle = Rect.fromLTWH(thirdVehicle.left + (dt * 150), thirdVehicle.top, thirdVehicle.width, thirdVehicle.height);
@@ -108,10 +158,12 @@ class FroggerGame extends BaseGame with KeyboardEvents {
       sixthVehicle = Rect.fromLTWH(sixthVehicle.left + (dt * 150), sixthVehicle.top, sixthVehicle.width, sixthVehicle.height);
     }
 
-    //move sixth vehicle
+    //move ninth vehicle
     if (ninthVehicle.left < (screenSize.width + ninthVehicle.width)) {
       ninthVehicle = Rect.fromLTWH(ninthVehicle.left + (dt * 150), ninthVehicle.top, ninthVehicle.width, ninthVehicle.height);
     }
+
+    
 
     //move second vehicle
     if (secondVehicle.left > -(secondVehicle.width)) {
@@ -138,6 +190,7 @@ class FroggerGame extends BaseGame with KeyboardEvents {
     if (seventhVehicle.left < (screenSize.width + seventhVehicle.width)) {
       seventhVehicle = Rect.fromLTWH(seventhVehicle.left + (dt * 150), seventhVehicle.top, seventhVehicle.width, seventhVehicle.height);
     }
+    */
   }
 
   @override

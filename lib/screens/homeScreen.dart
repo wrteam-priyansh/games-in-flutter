@@ -2,6 +2,7 @@
 
 import 'package:flame_playarea/screens/flappyBallScreen.dart';
 import 'package:flame_playarea/screens/froggerScreen.dart';
+import 'package:flame_playarea/screens/snackGameScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -13,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late List<String> games = ["Flappy Ball", "Frogger"];
+  late List<String> games = ["Flappy Ball", "Frogger", "Snack"];
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const FlappyBallScreen()));
                 } else if (games[index] == "Frogger") {
                   Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const FroggerScreen()));
+                } else if (games[index] == "Snack") {
+                  Navigator.of(context).push(CupertinoPageRoute(builder: (context) => const SnackGameScreen()));
                 }
               },
               title: Text(games[index]),
