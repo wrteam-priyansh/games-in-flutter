@@ -1,6 +1,11 @@
 import 'dart:async';
 
+import 'package:flame_playarea/utils/randomNumber.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+enum SnackDirection { left, up, down, right }
 
 class SnackGameScreen extends StatefulWidget {
   const SnackGameScreen({Key? key}) : super(key: key);
@@ -12,9 +17,17 @@ class SnackGameScreen extends StatefulWidget {
 class _SnackGameScreenState extends State<SnackGameScreen> {
   List<int> snake = [];
   Timer? gameLoop;
+  late int columns = 0;
+  late int score = 0;
+  late int rows = 10;
+  late bool isLoading = true;
+  late SnackDirection snackDirection = SnackDirection.down;
+  late bool gameOver = false;
+  late int foodIndex = 0;
 
   Color _gridContainerColor(int index) {
     if (snake.contains(index)) return Colors.red;
+    if (foodIndex == index) return Colors.greenAccent;
     return Theme.of(context).colorScheme.secondary;
   }
 
@@ -28,22 +41,91 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () {
-      snake.add(((MediaQuery.of(context).size.width ~/ 30) ~/ 2) * 5);
+      columns = (MediaQuery.of(context).size.width ~/ 30);
+      snake.add((columns ~/ 2) * 5);
+      snake.add(snake.first - columns);
+
+      isLoading = false;
+      foodIndex = RandomNumber.randomInteger(columns * rows);
+
       setState(() {});
       startTimer();
     });
   }
 
+  void reStart() {
+    columns = (MediaQuery.of(context).size.width ~/ 30);
+    snake = [];
+    snake.add((columns ~/ 2) * 5);
+    snake.add(snake.first - columns);
+
+    isLoading = false;
+    gameOver = false;
+    foodIndex = RandomNumber.randomInteger(columns * rows);
+    startTimer();
+    setState(() {});
+  }
+
   void startTimer() {
-    gameLoop = Timer.periodic(Duration(milliseconds: 500), (timer) {
-      if (snake.first < (MediaQuery.of(context).size.width ~/ 30) * 10) {
-        if (snake.length == 1) {
-          snake.first = snake.first + (MediaQuery.of(context).size.width ~/ 30);
-        } else {}
-      } else {
-        print("Game Over");
-        timer.cancel();
+    gameLoop = Timer.periodic(Duration(milliseconds: 400), (timer) {
+      if (snackDirection == SnackDirection.down) {
+        //check snack is not hitting bottom edge
+        if ((rows * columns) - snake.first > columns) {
+          snake.insert(0, snake.first + columns);
+        } else {
+          timer.cancel();
+          gameOver = true;
+        }
+      } else if (snackDirection == SnackDirection.up) {
+        //check snack is not hitting bottom edge
+        if (snake.first > columns) {
+          snake.insert(0, snake.first - columns);
+        } else {
+          timer.cancel();
+          gameOver = true;
+        }
+      } else if (snackDirection == SnackDirection.right) {
+        bool hittingEdge = false;
+        for (var i = 0; i < rows; i++) {
+          if (snake.first == (columns - 1) + columns * i) {
+            hittingEdge = true;
+          }
+        }
+
+        if (!hittingEdge) {
+          snake.insert(0, snake.first + 1);
+        } else {
+          timer.cancel();
+          gameOver = true;
+        }
+      } else if (snackDirection == SnackDirection.left) {
+        //check for left edge
+        bool hittingEdge = false;
+        for (var i = 0; i < rows; i++) {
+          if (snake.first == (i * columns)) {
+            hittingEdge = true;
+          }
+        }
+
+        if (!hittingEdge) {
+          snake.insert(0, snake.first - 1);
+        } else {
+          timer.cancel();
+          gameOver = true;
+        }
       }
+      if (snake.sublist(1).contains(snake.first)) {
+        timer.cancel();
+        gameOver = true;
+      } else {
+        if (snake.contains(foodIndex)) {
+          score++;
+          foodIndex = RandomNumber.randomInteger(columns * rows);
+        } else {
+          snake.removeLast();
+        }
+      }
+
       setState(() {});
     });
   }
@@ -51,24 +133,89 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top,
-        ),
-        child: GridView.builder(
-          padding: EdgeInsets.symmetric(
-            horizontal: 2.5,
-            vertical: 2.5,
-          ),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: (MediaQuery.of(context).size.width ~/ 30), crossAxisSpacing: 5.0, mainAxisSpacing: 5.0),
-          itemBuilder: (context, index) {
-            return Container(
-              decoration: BoxDecoration(color: _gridContainerColor(index), borderRadius: BorderRadius.circular(2.5)),
-            );
-          },
-          itemCount: (MediaQuery.of(context).size.width ~/ 30) * 10,
-        ),
-      ),
+      floatingActionButton: FloatingActionButton(onPressed: () {
+        //
+        Navigator.of(context).pop();
+      }),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Stack(
+              children: [
+                RawKeyboardListener(
+                  autofocus: true,
+                  focusNode: FocusNode(),
+                  onKey: (key) {
+                    if (key.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
+                      if (snackDirection != SnackDirection.right) {
+                        snackDirection = SnackDirection.left;
+                      }
+                    } else if (key.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+                      if (snackDirection != SnackDirection.left) {
+                        snackDirection = SnackDirection.right;
+                      }
+                    } else if (key.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
+                      if (snackDirection != SnackDirection.down) {
+                        snackDirection = SnackDirection.up;
+                      }
+                    } else if (key.isKeyPressed(LogicalKeyboardKey.arrowDown)) {
+                      if (snackDirection != SnackDirection.up) {
+                        snackDirection = SnackDirection.down;
+                      }
+                    }
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).padding.top,
+                    ),
+                    child: GridView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 2.5,
+                        vertical: 2.5,
+                      ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns, crossAxisSpacing: 2.5, mainAxisSpacing: 2.5),
+                      itemBuilder: (context, index) {
+                        return Container(
+                          padding: EdgeInsets.only(
+                            right: 5.0,
+                          ),
+                          alignment: Alignment.centerRight,
+                          child: snake.first == index
+                              ? CircleAvatar(
+                                  radius: 5,
+                                )
+                              : SizedBox(),
+                          decoration: BoxDecoration(color: _gridContainerColor(index), borderRadius: BorderRadius.circular(2.5)),
+                        );
+                      },
+                      itemCount: rows * columns,
+                    ),
+                  ),
+                ),
+                gameOver
+                    ? Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        alignment: Alignment.center,
+                        child: AlertDialog(
+                          content: Text("Score $score"),
+                          actions: [
+                            CupertinoButton(
+                                child: Text("Back"),
+                                onPressed: () {
+                                  //
+                                  Navigator.of(context).pop();
+                                }),
+                            CupertinoButton(
+                                child: Text("Play Again"),
+                                onPressed: () {
+                                  reStart();
+                                }),
+                          ],
+                        ),
+                      )
+                    : Container()
+              ],
+            ),
     );
   }
 }
