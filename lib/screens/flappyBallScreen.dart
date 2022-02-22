@@ -2,7 +2,6 @@
 
 import 'package:flame/game.dart';
 import 'package:flame_playarea/games/game.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class FlappyBallScreen extends StatefulWidget {
@@ -14,7 +13,8 @@ class FlappyBallScreen extends StatefulWidget {
 
 class _FlappyBallScreenState extends State<FlappyBallScreen> {
   late bool isGameOver = false;
-  late FlappyBirdGame flappyBirdGame = FlappyBirdGame(isGameOver: changeGameOver);
+  late FlappyBirdGame flappyBirdGame =
+      FlappyBirdGame(isGameOver: changeGameOver);
 
   void changeGameOver() {
     isGameOver = !isGameOver;
@@ -39,7 +39,8 @@ class _FlappyBallScreenState extends State<FlappyBallScreen> {
                           onPressed: () {
                             setState(() {
                               isGameOver = !isGameOver;
-                              flappyBirdGame = FlappyBirdGame(isGameOver: changeGameOver);
+                              flappyBirdGame =
+                                  FlappyBirdGame(isGameOver: changeGameOver);
                             });
                           },
                           child: const Text("Play Agian")),

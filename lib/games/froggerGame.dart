@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:flame/game.dart';
 import 'package:flame/keyboard.dart';
 import 'package:flame_playarea/utils/randomNumber.dart';
-import 'package:flutter/cupertino.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -49,12 +49,24 @@ class FroggerGame extends BaseGame with KeyboardEvents {
     for (int i = 0; i < vehiclesPerRow; i++) {
       //
       if (i == 0) {
-        bottomVehicles.add(Rect.fromLTWH(0, screenSize.height - vehicleHeight - (frogHeightWidth * 1.25), screenSize.width * RandomNumber.randomDouble(0.2, 0.4), vehicleHeight));
+        bottomVehicles.add(Rect.fromLTWH(
+            0,
+            screenSize.height - vehicleHeight - (frogHeightWidth * 1.25),
+            screenSize.width * RandomNumber.randomDouble(0.2, 0.4),
+            vehicleHeight));
       } else {
         Rect previousVehicle = bottomVehicles[i - 1];
-        bottomVehicles.add(Rect.fromLTWH(previousVehicle.left - previousVehicle.width - (frogHeightWidth * (RandomNumber.randomDouble(0.5, 0.75) + 1.0)), previousVehicle.top, screenSize.width * RandomNumber.randomDouble(0.2, 0.3), vehicleHeight));
+        bottomVehicles.add(Rect.fromLTWH(
+            previousVehicle.left -
+                previousVehicle.width -
+                (frogHeightWidth *
+                    (RandomNumber.randomDouble(0.5, 0.75) + 1.0)),
+            previousVehicle.top,
+            screenSize.width * RandomNumber.randomDouble(0.2, 0.3),
+            vehicleHeight));
       }
-      debugPrint("Vehicle $i left - ${bottomVehicles[i].left.toStringAsFixed(2)}");
+      debugPrint(
+          "Vehicle $i left - ${bottomVehicles[i].left.toStringAsFixed(2)}");
     }
   }
 
@@ -64,9 +76,12 @@ class FroggerGame extends BaseGame with KeyboardEvents {
     frogHeightWidth = screenSize.width * frogWidthHeightPercentage;
     vehicleHeight = screenSize.width * vehicleHeightPercentage;
 
-    nonWaterLine = Rect.fromLTWH(0, screenSize.height * (0.5), screenSize.width, screenSize.width * frogWidthHeightPercentage);
-    waterLine = Rect.fromLTWH(0, screenSize.height * (0.05), screenSize.width, screenSize.width * frogWidthHeightPercentage);
-    frog = Rect.fromLTWH(screenSize.width * (0.5) - frogHeightWidth, screenSize.height - frogHeightWidth, frogHeightWidth, frogHeightWidth);
+    nonWaterLine = Rect.fromLTWH(0, screenSize.height * (0.5), screenSize.width,
+        screenSize.width * frogWidthHeightPercentage);
+    waterLine = Rect.fromLTWH(0, screenSize.height * (0.05), screenSize.width,
+        screenSize.width * frogWidthHeightPercentage);
+    frog = Rect.fromLTWH(screenSize.width * (0.5) - frogHeightWidth,
+        screenSize.height - frogHeightWidth, frogHeightWidth, frogHeightWidth);
 
     addVehicles();
     /*
@@ -142,9 +157,11 @@ class FroggerGame extends BaseGame with KeyboardEvents {
       Rect bottomVehicle = bottomVehicles[i];
 
       if (bottomVehicle.left < (screenSize.width + bottomVehicle.width)) {
-        bottomVehicles[i] = Rect.fromLTWH(bottomVehicle.left + (dt * 150), bottomVehicle.top, bottomVehicle.width, bottomVehicle.height);
+        bottomVehicles[i] = Rect.fromLTWH(bottomVehicle.left + (dt * 150),
+            bottomVehicle.top, bottomVehicle.width, bottomVehicle.height);
       } else {
-        bottomVehicles[i] = Rect.fromLTWH(-bottomVehicle.width, bottomVehicle.top, bottomVehicle.width, bottomVehicle.height);
+        bottomVehicles[i] = Rect.fromLTWH(-bottomVehicle.width,
+            bottomVehicle.top, bottomVehicle.width, bottomVehicle.height);
       }
     }
 
@@ -197,19 +214,23 @@ class FroggerGame extends BaseGame with KeyboardEvents {
   void onKeyEvent(RawKeyEvent event) {
     if (event.isKeyPressed(LogicalKeyboardKey.arrowUp)) {
       if (frog.top > 0) {
-        frog = Rect.fromLTWH(frog.left, frog.top - frogHeightWidth, frog.width, frog.height);
+        frog = Rect.fromLTWH(
+            frog.left, frog.top - frogHeightWidth, frog.width, frog.height);
       }
     } else if (event.isKeyPressed(LogicalKeyboardKey.arrowDown)) {
       if (frog.top < (screenSize.height - frogHeightWidth)) {
-        frog = Rect.fromLTWH(frog.left, frog.top + frogHeightWidth, frog.width, frog.height);
+        frog = Rect.fromLTWH(
+            frog.left, frog.top + frogHeightWidth, frog.width, frog.height);
       }
     } else if (event.isKeyPressed(LogicalKeyboardKey.arrowLeft)) {
       if (frog.left > 0) {
-        frog = Rect.fromLTWH(frog.left - frogHeightWidth, frog.top, frog.width, frog.height);
+        frog = Rect.fromLTWH(
+            frog.left - frogHeightWidth, frog.top, frog.width, frog.height);
       }
     } else if (event.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
       if (frog.left < (screenSize.width - frogHeightWidth)) {
-        frog = Rect.fromLTWH(frog.left + frogHeightWidth, frog.top, frog.width, frog.height);
+        frog = Rect.fromLTWH(
+            frog.left + frogHeightWidth, frog.top, frog.width, frog.height);
       }
     }
   }

@@ -19,11 +19,12 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   Timer? gameLoop;
   late int columns = 0;
   late int score = 0;
-  late int rows = 10;
+  late int rows = 0;
   late bool isLoading = true;
   late SnackDirection snackDirection = SnackDirection.down;
   late bool gameOver = false;
   late int foodIndex = 0;
+  late double blockHeightAndWidth = 30.0;
 
   Color _gridContainerColor(int index) {
     if (snake.contains(index)) return Colors.red;
@@ -41,7 +42,9 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () {
-      columns = (MediaQuery.of(context).size.width ~/ 30);
+      columns = (MediaQuery.of(context).size.width ~/ blockHeightAndWidth);
+      rows =
+          (MediaQuery.of(context).size.height * (0.7) ~/ blockHeightAndWidth);
       snake.add((columns ~/ 2) * 5);
       snake.add(snake.first - columns);
 
@@ -54,13 +57,14 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   }
 
   void reStart() {
-    columns = (MediaQuery.of(context).size.width ~/ 30);
     snake = [];
     snake.add((columns ~/ 2) * 5);
     snake.add(snake.first - columns);
 
     isLoading = false;
     gameOver = false;
+    snackDirection = SnackDirection.down;
+    score = 0;
     foodIndex = RandomNumber.randomInteger(columns * rows);
     startTimer();
     setState(() {});
@@ -130,13 +134,66 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
     });
   }
 
+  Widget _buildControlMenu() {
+    return Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          margin: EdgeInsets.only(bottom: 20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              IconButton(
+                  onPressed: () {
+                    if (snackDirection != SnackDirection.down) {
+                      snackDirection = SnackDirection.up;
+                    }
+                  },
+                  icon: Icon(Icons.arrow_upward)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                      onPressed: () {
+                        if (snackDirection != SnackDirection.right) {
+                          snackDirection = SnackDirection.left;
+                        }
+                      },
+                      icon: Icon(Icons.arrow_back_rounded)),
+                  IconButton(
+                      onPressed: () {
+                        if (snackDirection != SnackDirection.up) {
+                          snackDirection = SnackDirection.down;
+                        }
+                      },
+                      icon: Icon(Icons.arrow_downward)),
+                  IconButton(
+                      onPressed: () {
+                        if (snackDirection != SnackDirection.left) {
+                          snackDirection = SnackDirection.right;
+                        }
+                      },
+                      icon: Icon(Icons.arrow_forward)),
+                ],
+              )
+            ],
+          ),
+        ));
+  }
+
+  Widget _buildScore() {
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: Container(
+        margin: EdgeInsets.only(left: 30.0, bottom: 30.0),
+        child: Text("Score : $score"),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(onPressed: () {
-        //
-        Navigator.of(context).pop();
-      }),
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : Stack(
@@ -149,7 +206,8 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
                       if (snackDirection != SnackDirection.right) {
                         snackDirection = SnackDirection.left;
                       }
-                    } else if (key.isKeyPressed(LogicalKeyboardKey.arrowRight)) {
+                    } else if (key
+                        .isKeyPressed(LogicalKeyboardKey.arrowRight)) {
                       if (snackDirection != SnackDirection.left) {
                         snackDirection = SnackDirection.right;
                       }
@@ -172,7 +230,10 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
                         horizontal: 2.5,
                         vertical: 2.5,
                       ),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: columns, crossAxisSpacing: 2.5, mainAxisSpacing: 2.5),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: columns,
+                          crossAxisSpacing: 2.5,
+                          mainAxisSpacing: 2.5),
                       itemBuilder: (context, index) {
                         return Container(
                           padding: EdgeInsets.only(
@@ -184,13 +245,17 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
                                   radius: 5,
                                 )
                               : SizedBox(),
-                          decoration: BoxDecoration(color: _gridContainerColor(index), borderRadius: BorderRadius.circular(2.5)),
+                          decoration: BoxDecoration(
+                              color: _gridContainerColor(index),
+                              borderRadius: BorderRadius.circular(2.5)),
                         );
                       },
                       itemCount: rows * columns,
                     ),
                   ),
                 ),
+                _buildControlMenu(),
+                _buildScore(),
                 gameOver
                     ? Container(
                         width: MediaQuery.of(context).size.width,
