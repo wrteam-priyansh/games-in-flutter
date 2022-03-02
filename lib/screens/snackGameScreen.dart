@@ -27,9 +27,9 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   late double blockHeightAndWidth = 30.0;
 
   Color _gridContainerColor(int index) {
-    if (snake.contains(index)) return Colors.red;
-    if (foodIndex == index) return Colors.greenAccent;
-    return Theme.of(context).colorScheme.secondary;
+    if (snake.contains(index)) return Colors.green;
+    if (foodIndex == index) return Colors.red;
+    return Colors.white.withOpacity(0.8);
   }
 
   @override
@@ -41,7 +41,7 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () {
+    Future.delayed(Duration.zero, () async {
       columns = (MediaQuery.of(context).size.width ~/ blockHeightAndWidth);
       rows =
           (MediaQuery.of(context).size.height * (0.7) ~/ blockHeightAndWidth);
@@ -52,6 +52,7 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
       foodIndex = RandomNumber.randomInteger(columns * rows);
 
       setState(() {});
+      await Future.delayed(Duration(milliseconds: 100));
       startTimer();
     });
   }
@@ -134,48 +135,80 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
     });
   }
 
+  /*
+  if (snackDirection != SnackDirection.down) {
+          snackDirection = SnackDirection.up;
+        }
+   */
+  Widget _buildControlButton(IconData iconData, Function onTap) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: GestureDetector(
+        onTap: () {
+          onTap();
+        },
+        child: Container(
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+              color: Colors.grey.shade900,
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 10,
+                  color: Colors.black,
+                  offset: Offset(3, 3),
+                ),
+                BoxShadow(
+                  blurRadius: 10,
+                  color: Colors.grey.shade800,
+                  offset: Offset(-3, -3),
+                ),
+              ]),
+          child: Icon(
+            iconData,
+            color: Colors.white.withOpacity(0.8),
+          ),
+          height: 50.0,
+          width: 50.0,
+        ),
+      ),
+    );
+  }
+
   Widget _buildControlMenu() {
     return Align(
         alignment: Alignment.bottomCenter,
         child: Container(
-          margin: EdgeInsets.only(bottom: 20.0),
+          margin: EdgeInsets.only(bottom: 15.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              IconButton(
-                  onPressed: () {
-                    if (snackDirection != SnackDirection.down) {
-                      snackDirection = SnackDirection.up;
-                    }
-                  },
-                  icon: Icon(Icons.arrow_upward)),
+              _buildControlButton(Icons.arrow_upward, () {
+                if (snackDirection != SnackDirection.down) {
+                  snackDirection = SnackDirection.up;
+                }
+              }),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                      onPressed: () {
-                        if (snackDirection != SnackDirection.right) {
-                          snackDirection = SnackDirection.left;
-                        }
-                      },
-                      icon: Icon(Icons.arrow_back_rounded)),
-                  IconButton(
-                      onPressed: () {
-                        if (snackDirection != SnackDirection.up) {
-                          snackDirection = SnackDirection.down;
-                        }
-                      },
-                      icon: Icon(Icons.arrow_downward)),
-                  IconButton(
-                      onPressed: () {
-                        if (snackDirection != SnackDirection.left) {
-                          snackDirection = SnackDirection.right;
-                        }
-                      },
-                      icon: Icon(Icons.arrow_forward)),
+                  _buildControlButton(Icons.arrow_back_rounded, () {
+                    if (snackDirection != SnackDirection.right) {
+                      snackDirection = SnackDirection.left;
+                    }
+                  }),
+                  _buildControlButton(Icons.arrow_downward, () {
+                    if (snackDirection != SnackDirection.up) {
+                      snackDirection = SnackDirection.down;
+                    }
+                  }),
+                  _buildControlButton(Icons.arrow_forward, () {
+                    if (snackDirection != SnackDirection.left) {
+                      snackDirection = SnackDirection.right;
+                    }
+                  }),
                 ],
-              )
+              ),
             ],
           ),
         ));
@@ -185,8 +218,12 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
     return Align(
       alignment: Alignment.bottomLeft,
       child: Container(
-        margin: EdgeInsets.only(left: 30.0, bottom: 30.0),
-        child: Text("Score : $score"),
+        margin: EdgeInsets.only(left: 20.0, bottom: 115.0),
+        child: Text(
+          "Score : $score",
+          style:
+              TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 18.0),
+        ),
       ),
     );
   }
@@ -194,6 +231,7 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade900,
       body: isLoading
           ? Center(child: CircularProgressIndicator())
           : Stack(
@@ -242,6 +280,7 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
                           alignment: Alignment.centerRight,
                           child: snake.first == index
                               ? CircleAvatar(
+                                  backgroundColor: Colors.yellow,
                                   radius: 5,
                                 )
                               : SizedBox(),
@@ -262,16 +301,28 @@ class _SnackGameScreenState extends State<SnackGameScreen> {
                         height: MediaQuery.of(context).size.height,
                         alignment: Alignment.center,
                         child: AlertDialog(
-                          content: Text("Score $score"),
+                          content: Text(
+                            "Score $score",
+                            style: TextStyle(
+                                color: Colors.grey.shade900,
+                                fontSize: 18.0,
+                                fontWeight: FontWeight.w600),
+                          ),
                           actions: [
                             CupertinoButton(
-                                child: Text("Back"),
+                                child: Text("Back",
+                                    style: TextStyle(
+                                        color: Colors.grey.shade900,
+                                        fontWeight: FontWeight.w500)),
                                 onPressed: () {
                                   //
                                   Navigator.of(context).pop();
                                 }),
                             CupertinoButton(
-                                child: Text("Play Again"),
+                                child: Text("Play Again",
+                                    style: TextStyle(
+                                        color: Colors.grey.shade900,
+                                        fontWeight: FontWeight.w500)),
                                 onPressed: () {
                                   reStart();
                                 }),
